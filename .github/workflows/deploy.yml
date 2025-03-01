@@ -1,0 +1,44 @@
+deploy:
+  needs: test
+
+  permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+  environment:
+    name: production
+    url: ${{ steps.deployment.outputs.page_url }}
+
+  runs-on: ubuntu-latest
+
+  steps:
+    - name: checkout repo
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: use node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22.x'
+    
+    - name: configure github pages
+      uses: actions/configure-pages@v5
+
+    - run: npm install
+    - run: npm run build
+
+    - name: upload artifacts
+      uses: actions/upload-pages-artifact@v1
+      with: 
+        path: "./out"
+
+    - name: deploy
+      id: deployment
+      uses: actions/deploy-pages@v1
+
+    - name: notify
+      run: |
+        echo "Deployment successful: {{ github.ref }}"
+        echo "Page URL: ${{ steps.deployment.outputs.page_url }}"
