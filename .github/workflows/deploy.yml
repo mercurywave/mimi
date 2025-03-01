@@ -1,44 +1,72 @@
-deploy:
-  needs: test
+name: build-test-deploy
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: 
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: use node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - run: npm install
+      - run: npm run build
+      
+  test: 
+    needs: build
+    runs-on: ubuntu-latest
+    steps: 
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - name: use node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - run: npm install
+      - run: npm test
 
-  permissions:
-    contents: read
-    pages: write
-    id-token: write
+  deploy:
+    needs: test
 
-  environment:
-    name: production
-    url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
 
-  runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
 
-  steps:
-    - name: checkout repo
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
 
-    - name: use node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '22.x'
-    
-    - name: configure github pages
-      uses: actions/configure-pages@v5
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - run: npm install
-    - run: npm run build
+      - name: use node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+      
+      - name: configure github pages
+        uses: actions/configure-pages@v5
 
-    - name: upload artifacts
-      uses: actions/upload-pages-artifact@v1
-      with: 
-        path: "./out"
+      - run: npm install
+      - run: npm run build
 
-    - name: deploy
-      id: deployment
-      uses: actions/deploy-pages@v1
+      - name: upload artifacts
+        uses: actions/upload-pages-artifact@v1
+        with: 
+          path: "./out"
 
-    - name: notify
-      run: |
-        echo "Deployment successful: {{ github.ref }}"
-        echo "Page URL: ${{ steps.deployment.outputs.page_url }}"
+      - name: deploy
+        id: deployment
+        uses: actions/deploy-pages@v1
+
+      - name: notify
+        run: |
+          echo "Deployment successful: {{ github.ref }}"
+          echo "Page URL: ${{ steps.deployment.outputs.page_url }}"
