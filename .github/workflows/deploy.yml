@@ -51,7 +51,7 @@ jobs:
 
       - name: deploy
         id: deployment
-        uses: actions/deploy-pages@v3
+        uses: actions/deploy-pages@v4
 
       - name: notify
         run: |
