@@ -16,10 +16,8 @@ function initUi(){
 
 
 async function setup(){
-    await AI.Setup();
     console.log("Hello World");
 }
-
 
 async function runPrompt(): Promise<void>{
     const txtPrompt = document.getElementById("txtPrompt") as HTMLTextAreaElement;

@@ -1,7 +1,7 @@
 import { CreateMLCEngine, MLCEngine } from "../node_modules/@mlc-ai/web-llm/lib/index";
 
 
-export class AIManager{
+export class AIManager {
     _engine: MLCEngine;
     public get isActive(): boolean { return this._engine != null; }
     public async Setup(): Promise<void>{
