@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        app: './src/index.ts',  // Entry point for your application
+        app: ['./src/index.ts', './src/mimi.ts'],  // Entry point for your application
     },
     module: {
         rules: [
@@ -16,6 +16,7 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.js']
     },
+    devtool: "source-map",
     output: {
         filename: '[name].bundle.js',
         path: path.resolve(__dirname, 'dist')
