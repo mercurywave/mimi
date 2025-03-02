@@ -26,7 +26,7 @@ async function runPrompt(): Promise<void>{
     let prompt = txtPrompt.value;
     txtPrompt.value = "";
     addChat(prompt, "user");
-    let response = await AI.DebugPrompt(prompt);
+    let response = await AI.SimplePrompt(prompt);
     addChat(response, "ai");
 }
 
