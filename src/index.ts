@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initUi(){
     const txtPrompt = document.getElementById("txtPrompt") as HTMLTextAreaElement;
     txtPrompt.addEventListener("keyup", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && e.ctrlKey) {
             runPrompt();
         }
     });
@@ -38,7 +38,7 @@ function addAiChatPlacehodler(): HTMLParagraphElement{
 function addChat(message: string, role: string): HTMLParagraphElement {
     const divResponse = document.getElementById("response") as HTMLDivElement;
     let addition = document.createElement("p");
-    addition.classList.add(role);
+    addition.classList.add(role, "bubble");
     addition.innerText = message;
     divResponse.appendChild(addition);
     return addition;

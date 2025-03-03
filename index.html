@@ -9,14 +9,19 @@
     <script src="dist/app.bundle.js"></script>
 </head>
 <body>
-    <div class="toolbar">
-    </div>
-    <div id="main">
-        <div id="response"></div>
-        <textarea id="txtPrompt" rows="10" cols="50"></textarea>
-    </div>
-    <div id="mimiContainer">
-        <mimi-monitor id="mimiMonitor"></mimi-monitor>
+    <div id="mainWrap">
+        <div id="toolbar">
+            <button id="btJournal" class="addBt" role="button">+ Journal</button>
+            <button id="btNote" class="addBt" role="button">+ Note</button>
+            <button id="btChat" class="addBt" role="button">+ Chat</button>
+        </div>
+        <div id="main">
+            <div id="response"></div>
+            <textarea id="txtPrompt" rows="10" cols="50"></textarea>
+        </div>
+        <div id="mimiContainer">
+            <mimi-monitor id="mimiMonitor"></mimi-monitor>
+        </div>
     </div>
 </body>
 </html>

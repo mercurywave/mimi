@@ -74,7 +74,6 @@ export class MimiMonitor extends HTMLElement {
         util.ToggleClassIf(this.__aiDot, "loading", ai.isLoading);
         util.ToggleClassIf(this.__aiDot, "ready", ai.isReady && !ai.isRunning);
         util.ToggleClassIf(this.__aiDot, "active", ai.isRunning);
-        console.log(ai.loadPercentage);
         this.__ctlProgress.setAttribute("progress", `${ai.loadPercentage * 100}`);
     }
 }
@@ -112,7 +111,6 @@ class CircleProgress extends HTMLElement {
         return ['progress'];
     }
     attributeChangedCallback(name, oldValue, newValue){
-        console.log(name, oldValue, newValue);
         if(name === "progress"){
             let circle = this.shadowRoot.querySelector(".cirProgress") as HTMLDivElement;
             circle.style.setProperty('--progress', `${newValue}%`); // 0-100
