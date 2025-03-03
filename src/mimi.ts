@@ -28,14 +28,12 @@ export class MimiMonitor extends HTMLElement {
             }
             .aiDot.loading {
                 border: 20px outset rgb(154, 68, 235);
-                animation: animActive 2s cubic-bezier(.49,.06,.43,.85) infinite;
             }
             .aiDot.ready {
                 border: 20px outset rgb(79, 96, 164);
             }
             .aiDot.active {
                 border: 20px outset rgb(227, 144, 43);
-                animation: animActive 2s cubic-bezier(.49,.06,.43,.85) infinite;
             }
             .divQueue{
                 position: absolute;
