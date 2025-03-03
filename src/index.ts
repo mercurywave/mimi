@@ -24,14 +24,22 @@ async function runPrompt(): Promise<void>{
     let prompt = txtPrompt.value;
     txtPrompt.value = "";
     addChat(prompt, "user");
-    let response = await AI.SimplePrompt(prompt);
-    addChat(response, "ai");
+    let bubble = addAiChatPlacehodler();
+    let response = await AI.SimpleStreamPrompt(prompt, (reply) => {
+        bubble.innerText = reply;
+    });
+    bubble.innerText = response;
 }
 
-function addChat(message: string, role: string){
+function addAiChatPlacehodler(): HTMLParagraphElement{
+    return addChat("...", "ai");
+}
+
+function addChat(message: string, role: string): HTMLParagraphElement {
     const divResponse = document.getElementById("response") as HTMLDivElement;
     let addition = document.createElement("p");
     addition.classList.add(role);
     addition.innerText = message;
     divResponse.appendChild(addition);
+    return addition;
 }
