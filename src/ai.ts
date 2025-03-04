@@ -28,8 +28,8 @@ export class AIManager {
                 this.SignalEvent();
                 console.log(`Load Progress: ${progress * 100}`)
             },
-            
         });
+        this._loadPercentage = 1;
     }
     public async SimplePrompt(prompt:string): Promise<string> {
         var runner = this._manager.AddAgent(new SimpleAgent(), prompt);
@@ -137,7 +137,7 @@ export class AgentRunner{
     _rollback: boolean = false;
     public async Inturrupt(): Promise<void> {
         if(this.running){
-            await AI._engine.interruptGenerate();
+            await AI._engine?.interruptGenerate();
             this._rollback = true;
         }
     }
