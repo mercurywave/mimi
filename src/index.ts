@@ -1,4 +1,4 @@
-import { AI } from "./ai";
+import { AI, SimpleAgent } from "./ai";
 
 document.addEventListener("DOMContentLoaded", () => {
     initUi();
@@ -21,14 +21,21 @@ async function setup(){
 
 async function runPrompt(): Promise<void>{
     const txtPrompt = document.getElementById("txtPrompt") as HTMLTextAreaElement;
+    const divResponse = document.getElementById("response") as HTMLDivElement;
     let prompt = txtPrompt.value;
     txtPrompt.value = "";
     addChat(prompt, "user");
     let bubble = addAiChatPlacehodler();
-    let response = await AI.SimpleStreamPrompt(prompt, (reply) => {
+    let stop = addStopButton();
+    divResponse.appendChild(stop);
+    let job = AI.Queue(prompt, new SimpleAgent((reply) => {
         bubble.innerText = reply;
-    });
-    bubble.innerText = response;
+    }));
+    stop.addEventListener("click", () => { job.Cancel(); });
+    try{
+        bubble.innerText = await job.onComplete;
+    } catch(e) { }
+    divResponse.removeChild(stop);
 }
 
 function addAiChatPlacehodler(): HTMLParagraphElement{
@@ -42,4 +49,12 @@ function addChat(message: string, role: string): HTMLParagraphElement {
     addition.innerText = message;
     divResponse.appendChild(addition);
     return addition;
+}
+
+function addStopButton(): HTMLButtonElement{
+    let bt = document.createElement("button");
+    bt.classList.add("btStop");
+    bt.role = "button";
+    bt.innerText = "Stop";
+    return bt;
 }

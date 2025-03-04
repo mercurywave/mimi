@@ -31,6 +31,12 @@ export class AIManager {
         });
         this._loadPercentage = 1;
     }
+
+    public Queue(input: any, agent?:Agent): AgentRunner{
+        agent ??= new SimpleAgent();
+        return this._manager.AddAgent(agent, input);
+    }
+
     public async SimplePrompt(prompt:string): Promise<string> {
         var runner = this._manager.AddAgent(new SimpleAgent(), prompt);
         return await runner.onComplete;
@@ -129,12 +135,20 @@ export class AgentRunner{
     public get priority(): ePriority { return this.agent.priority; }
     
     _cancel : boolean = false;
+    /** 
+     * halt the job from continuing
+    */
     public Cancel():void {
         this._cancel = true;
-        this.Inturrupt();
+        this.Inturrupt().then(() => {
+            this.onComplete.reject("cancelled");
+        });
     }
     public get isCancelled(): boolean { return this._cancel; }
     _rollback: boolean = false;
+    /**
+     * If the AI is running, bump it to run something more important
+     */
     public async Inturrupt(): Promise<void> {
         if(this.running){
             await AI._engine?.interruptGenerate();
@@ -223,7 +237,11 @@ class AgentManager{
     }
 }
 
-class SimpleAgent extends Agent{
+export class SimpleAgent extends Agent{
+    constructor(onStream?: (reply: string) => void){
+        super();
+        this.onStream = onStream;
+    }
     public GetBasePrompt(): string[] { return [] };
     public async Setup(input: string): Promise<string> {
         return input;
