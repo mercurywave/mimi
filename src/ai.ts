@@ -1,4 +1,4 @@
-import { ChatCompletionMessageParam, CreateMLCEngine, MLCEngine } from "../node_modules/@mlc-ai/web-llm/lib/index";
+import { ChatCompletionMessage, ChatCompletionMessageParam, CreateMLCEngine, MLCEngine } from "../node_modules/@mlc-ai/web-llm/lib/index";
 import { MimiMonitor } from "./mimi";
 import { Deferred } from "./util";
 
@@ -72,10 +72,6 @@ export class AIManager {
     }
 
     public async StreamPrompt(persona: string, prompts: string[], data: string[], streamer: (reply:string) => void ): Promise<string>{
-        await this.Setup();
-        this._isRunning = true;
-        this.SignalEvent();
-
         let messages: ChatCompletionMessageParam[] = [{ role: "system", content: persona }];
         for (const line of prompts) {
             messages.push({ role: "system", content: line })
@@ -84,6 +80,14 @@ export class AIManager {
             messages.push({ role: "user", content: line })
         }
 
+        return await this.StreamMessages(messages, streamer);
+    }
+
+    public async StreamMessages(messages: ChatCompletionMessageParam[], streamer: (reply:string) => void ): Promise<string> {
+        await this.Setup();
+        this._isRunning = true;
+
+        this.SignalEvent();
         const chunks = await this._engine.chat.completions.create({
             messages: messages,
             stream: true,
@@ -112,7 +116,7 @@ export abstract class Agent{
     public persona: string = "You are a helpful AI assistant.";
     public abstract GetBasePrompt(): string[];
     public abstract Setup(input: any): Promise<string>;
-    public async Process(input: string): Promise<string> {
+    public async Process(obj: any, input: string): Promise<string> {
         let prompt = this.GetBasePrompt();
         if(this.onStream)
             return await AI.StreamPrompt(this.persona, prompt, [input], this.onStream);
@@ -166,7 +170,7 @@ export class AgentRunner{
                     this._rollback = false;
                     this.running = true;
                     try{
-                        this.process = await this.agent.Process(this.process);
+                        this.process = await this.agent.Process(this.input, this.process);
                     } catch(e) {
                         throw e;
                     }

@@ -1,4 +1,6 @@
+import { AI } from "./ai";
 import { Chat, DB, Message } from "./db";
+import { ChatAgent } from "./index";
 import { con, util } from "./util";
 
 export class ChatPanel extends HTMLElement {
@@ -15,6 +17,7 @@ export class ChatPanel extends HTMLElement {
     
     __chat: Chat;
     __panel: HTMLDivElement;
+    public __dirty: boolean = false;
     constructor(chat: Chat){
         super();
         this.__chat = chat;
@@ -32,10 +35,36 @@ export class ChatPanel extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue){
     }
 
-    public AddMessage(type: string, text?: string){
-        let msg = DB.CreateMessage(type, text);
+    public AddMessage(type: string, text?: string, isPending?: boolean): ChatMessage{
+        let msg = DB.CreateMessage(type, text, isPending);
         this.__chat.messages.push(msg);
-        this.__panel.appendChild(new ChatMessage(this, msg));
+        let bubble = new ChatMessage(this, msg);
+        this.__panel.appendChild(bubble);
+        return bubble;
+    }
+
+    public Save() {
+        console.log(this.__chat);
+        //DB.SaveChat(this.__chat);
+    }
+
+    public async RunPrompt(): Promise<void>{
+        let bubble = this.AddMessage(con.msg.typeAi, "...", true);
+        bubble.focusOnStop();
+
+        let persona = "You are a professional therapist who wants to help your patients succeed";
+        let job = AI.Queue(this.__chat, new ChatAgent(persona, (reply) => {
+            bubble.value = reply;
+        }));
+        bubble.__btStop.addEventListener("click", () => { job.Cancel(); });
+        try{
+            bubble.value = await job.onComplete;
+        } catch(e) { }
+
+        bubble.Finalize();
+        
+        let next = this.AddMessage(con.msg.typeUser);
+        next.focusOnText();
     }
 }
 
@@ -118,8 +147,10 @@ export class ChatMessage extends HTMLElement {
     __panel: ChatPanel;
     __message: Message;
     __bubble: HTMLTextAreaElement;
-    __btStop: HTMLButtonElement;
+    public __btStop: HTMLButtonElement;
     __wrap: HTMLDivElement;
+    public get type(): string { return this.__message.type; }
+    public get isPending(): boolean { return this.__message.isPending; }
     constructor(chat: ChatPanel, message: Message){
         super();
         this.__panel = chat;
@@ -133,13 +164,23 @@ export class ChatMessage extends HTMLElement {
         this.__btStop = this.shadowRoot.querySelector(".btStop");
         this.__wrap = this.shadowRoot.querySelector(".bubbleWrap") as any;
         this.__wrap.classList.add(ChatMessage.getClass(this.__message));
-        this.__bubble.value = this.__message.text;
         this.__bubble.addEventListener("input", () => {
             // this is a clever hack to fill the wrapper to the same size
             // this makes the textarea expand to fill available space
             this.__wrap.dataset.replicatedValue = this.__bubble.value;
+            this.__message.text = this.__bubble.value;
+            this.__panel.__dirty = true;
         });
-        this.__wrap.dataset.replicatedValue = this.__bubble.value;
+        this.value = this.__message.text;
+        this.__bubble.addEventListener("keyup", (e) => {
+            if (e.key === "Enter") {
+                if(this.type == con.msg.typeUser && this.isPending){
+                    this.Finalize();
+                    this.__panel.RunPrompt();
+                    e.preventDefault();
+                }
+            }
+        });
         this.update();
     }
     attributeChangedCallback(name, oldValue, newValue){
@@ -148,6 +189,23 @@ export class ChatMessage extends HTMLElement {
     static getClass(message: Message): string{
         return message.type;
     }
+
+    public focusOnStop() { this.__btStop.focus(); }
+    public focusOnText() { this.__bubble.focus(); }
+
+    public set value(val: string) { 
+        this.__bubble.value = val; 
+        this.__message.text = val;
+        this.__wrap.dataset.replicatedValue = val;
+    }
+
+    public Finalize(){
+        this.__message.isPending = false;
+        this.__panel.Save();
+        this.update();
+    }
+
+    save() { this.__panel.Save(); }
 
     update(){
         const isPending = this.__message.isPending;

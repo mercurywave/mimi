@@ -35,9 +35,8 @@ export namespace DB {
         return chat;
     }
 
-    export function CreateMessage(type: string, text?: string): Message {
+    export function CreateMessage(type: string, text?: string, isPending?: boolean): Message {
         let now =  new Date().toISOString();
-        let isPending = (type == con.msg.typeUser);
         let msg = {
             text: text ?? "",
             creationIso: now,

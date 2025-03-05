@@ -29,20 +29,6 @@
     flex-direction: column-reverse;
 }
 
-#txtPrompt{
-    width: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    border: 0;
-    outline: 1px solid #FEE0E0;
-    border-radius: 11px;
-    padding: 8px;
-    box-shadow: 0;
-    resize: vertical;
-}
-#txtPrompt:focus{
-    outline: 1px solid #D33A2C;
-}
-
 
 
 .addBt {
