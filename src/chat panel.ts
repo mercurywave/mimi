@@ -47,7 +47,7 @@ export class ChatMessage extends HTMLElement {
             <div class="bubbleWrap">
                 <textarea class="bubble" rows="1"></textarea>
             </div>
-            <button class="btStop nodisp" role="button">
+            <button class="btStop nodisp" role="button">Stop</button>
         </div>
         <style>
             .bubbleWrap{
@@ -103,6 +103,13 @@ export class ChatMessage extends HTMLElement {
             .ai .bubble {
                 background-color: #FFE7E7;
             }
+            
+            .btStop{
+                float: left;
+                margin: 6px 4px;
+                padding: 4px 8px;
+                border-radius: 11px;
+            }
             .nodisp{ display: none; }
         </style>
     `);
@@ -113,7 +120,6 @@ export class ChatMessage extends HTMLElement {
     __bubble: HTMLTextAreaElement;
     __btStop: HTMLButtonElement;
     __wrap: HTMLDivElement;
-    __isEditing: boolean;
     constructor(chat: ChatPanel, message: Message){
         super();
         this.__panel = chat;
@@ -134,6 +140,7 @@ export class ChatMessage extends HTMLElement {
             this.__wrap.dataset.replicatedValue = this.__bubble.value;
         });
         this.__wrap.dataset.replicatedValue = this.__bubble.value;
+        this.update();
     }
     attributeChangedCallback(name, oldValue, newValue){
     }
@@ -145,8 +152,7 @@ export class ChatMessage extends HTMLElement {
     update(){
         const isPending = this.__message.isPending;
         const type = this.__message.type;
-        util.ToggleClassIf(this.__btStop, "nodisp", type == con.msg.typeAi && isPending);
-        util.ToggleClassIf(this.__bubble, "nodisp", this.__isEditing);
+        util.ToggleClassIf(this.__btStop, "nodisp", type != con.msg.typeAi || !isPending);
     }
 }
 
