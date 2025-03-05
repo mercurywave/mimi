@@ -2,7 +2,7 @@ import { AIManager } from "./ai";
 import { util } from "./util";
 
 export class MimiMonitor extends HTMLElement {
-    static _tmplt = mkTmplt(`
+    static _tmplt = util.mkTmplt(/* html */`
         <div class="aiContainer">
             <circle-progress class="aiProgress"></circle-progress>
             <div class="aiDot"></div>
@@ -79,7 +79,7 @@ export class MimiMonitor extends HTMLElement {
 }
 
 class CircleProgress extends HTMLElement {
-    static _tmplt = mkTmplt(`
+    static _tmplt = util.mkTmplt(/* html */`
         <div class="cirProgress"></div>
         <style>
             .cirProgress{
@@ -116,12 +116,6 @@ class CircleProgress extends HTMLElement {
             circle.style.setProperty('--progress', `${newValue}%`); // 0-100
         }
     }
-}
-
-function mkTmplt(innerHtml): HTMLTemplateElement{
-    var tmplt = document.createElement("template");
-    tmplt.innerHTML = innerHtml;
-    return tmplt;
 }
 
 customElements.define("mimi-monitor", MimiMonitor);

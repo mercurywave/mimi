@@ -1,4 +1,4 @@
-import { Deferred } from "./util";
+import { con, Deferred } from "./util";
 
 export namespace DB {
     let _db: IDBDatabase | null = null;
@@ -23,15 +23,29 @@ export namespace DB {
         await future;
     }
 
-    export function CreateChat(): Chat {
+    export function CreateChat(type: string): Chat {
         let now =  new Date().toISOString();
         let chat = {
             id: crypto.randomUUID(),
             messages: [],
             creationIso: now,
             editIso: now,
+            type: type,
         };
         return chat;
+    }
+
+    export function CreateMessage(type: string, text?: string): Message {
+        let now =  new Date().toISOString();
+        let isPending = (type == con.msg.typeUser);
+        let msg = {
+            text: text ?? "",
+            creationIso: now,
+            editIso: now,
+            type: type,
+            isPending: isPending,
+        };
+        return msg;
     }
 
     export async function SaveChat(chat: Chat): Promise<void>{
@@ -62,6 +76,7 @@ export interface Chat {
     id: string;
     creationIso: string;
     editIso: string;
+    type: string;
 }
 
 export interface Message {
@@ -69,4 +84,5 @@ export interface Message {
     creationIso: string;
     editIso: string;
     isPending: boolean;
+    type: string;
 }

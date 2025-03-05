@@ -1,9 +1,14 @@
 import { AI, SimpleAgent } from "./ai";
+import { ChatPanel } from "./chat panel";
+import { Chat, DB, Message } from "./db";
+import { con } from "./util";
 
 document.addEventListener("DOMContentLoaded", () => {
     initUi();
     setup();
 });
+
+let _activePanel: ChatPanel | null = null;
 
 function initUi(){
     const txtPrompt = document.getElementById("txtPrompt") as HTMLTextAreaElement;
@@ -12,6 +17,12 @@ function initUi(){
             runPrompt();
         }
     });
+    let activeChat = DB.CreateChat(con.cht.typeNote);
+    _activePanel = new ChatPanel(activeChat);
+    const divChat = document.getElementById("chatContainer") as HTMLDivElement;
+    divChat.appendChild(_activePanel);
+    _activePanel.AddMessage(con.msg.typeAi, "here's a message for you");
+    _activePanel.AddMessage(con.msg.typeUser, "yes, I can see that...");
 }
 
 

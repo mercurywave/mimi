@@ -29,24 +29,6 @@
     flex-direction: column-reverse;
 }
 
-#response .bubble {
-    width: 80%;
-    margin: 6px 4px;
-    padding: 8px;
-    border-radius: 11px;
-}
-
-#response .user {
-    background-color: #521611;
-    color: #FFFFFF;
-    float: right;
-}
-
-#response .ai {
-    background-color: #FFE7E7;
-    float: left;
-}
-
 #txtPrompt{
     width: 100%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

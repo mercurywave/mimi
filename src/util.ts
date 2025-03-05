@@ -1,4 +1,18 @@
 
+export namespace con{
+    export namespace cht{
+        export const typeJournal = "journal";
+        export const typeChat = "chat";
+        export const typeNote = "note";
+    }
+    export namespace msg{
+        export const typeAi = "ai";
+        export const typeUser = "user";
+        export const typeNote = "note";
+        export const typePrompt = "prompt";
+    }
+}
+
 export namespace util {
     export function ToggleClassIf(element: HTMLElement, className: string, condition: boolean) {
         if (!condition && element.classList.contains(className)) {
@@ -6,6 +20,13 @@ export namespace util {
         } else if (condition && !element.classList.contains(className)) {
             element.classList.add(className);
         }
+    }
+
+    
+    export function mkTmplt(innerHtml): HTMLTemplateElement{
+        var tmplt = document.createElement("template");
+        tmplt.innerHTML = innerHtml;
+        return tmplt;
     }
 }
 
