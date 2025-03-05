@@ -44,26 +44,64 @@ export class ChatPanel extends HTMLElement {
 export class ChatMessage extends HTMLElement {
     static _tmplt = util.mkTmplt(/* html */`
         <div class="container">
-            <p class="bubble"></p>
+            <div class="bubbleWrap">
+                <textarea class="bubble" rows="1"></textarea>
+            </div>
             <button class="btStop nodisp" role="button">
         </div>
         <style>
-            .bubble {
-                width: 80%;
+            .bubbleWrap{
+                width: 100%;
                 margin: 6px 4px;
+                display: grid;
+            }
+            .bubbleWrap::after{
                 padding: 8px;
+                content: attr(data-replicated-value) " ";
+                white-space: pre-wrap;
+                visibility: hidden;
+            }
+            .bubbleWrap > textarea,
+            .bubbleWrap::after {
+                font: inherit;
+
+                /* Place on top of each other */
+                grid-area: 1 / 1 / 2 / 2;
+            }
+            .bubble {
+                padding: 8px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 border-radius: 11px;
+                border: 0;
+                outline: 1px solid #FEE0E0;
+                border-radius: 11px;
+                box-shadow: 0;
+                resize: none;
+                overflow: hidden;
+            }
+            .bubble:focus{
+                outline: 1px solid #D33A2C;
+                background-color: #fff !important;
+                color: #000  !important;
             }
 
             .user {
+                width: 80%;
+                float: right;
+            }
+            
+            .user .bubble {
                 background-color: #521611;
                 color: #FFFFFF;
-                float: right;
             }
 
             .ai {
-                background-color: #FFE7E7;
+                width: 80%;
                 float: left;
+            }
+
+            .ai .bubble {
+                background-color: #FFE7E7;
             }
             .nodisp{ display: none; }
         </style>
@@ -72,7 +110,10 @@ export class ChatMessage extends HTMLElement {
 
     __panel: ChatPanel;
     __message: Message;
-    __bubble: HTMLParagraphElement;
+    __bubble: HTMLTextAreaElement;
+    __btStop: HTMLButtonElement;
+    __wrap: HTMLDivElement;
+    __isEditing: boolean;
     constructor(chat: ChatPanel, message: Message){
         super();
         this.__panel = chat;
@@ -83,14 +124,29 @@ export class ChatMessage extends HTMLElement {
     
     connectedCallback(){
         this.__bubble = this.shadowRoot.querySelector(".bubble");
-        this.__bubble.innerText = this.__message.text;
-        this.__bubble.classList.add(ChatMessage.getClass(this.__message));
+        this.__btStop = this.shadowRoot.querySelector(".btStop");
+        this.__wrap = this.shadowRoot.querySelector(".bubbleWrap") as any;
+        this.__wrap.classList.add(ChatMessage.getClass(this.__message));
+        this.__bubble.value = this.__message.text;
+        this.__bubble.addEventListener("input", () => {
+            // this is a clever hack to fill the wrapper to the same size
+            // this makes the textarea expand to fill available space
+            this.__wrap.dataset.replicatedValue = this.__bubble.value;
+        });
+        this.__wrap.dataset.replicatedValue = this.__bubble.value;
     }
     attributeChangedCallback(name, oldValue, newValue){
     }
 
     static getClass(message: Message): string{
         return message.type;
+    }
+
+    update(){
+        const isPending = this.__message.isPending;
+        const type = this.__message.type;
+        util.ToggleClassIf(this.__btStop, "nodisp", type == con.msg.typeAi && isPending);
+        util.ToggleClassIf(this.__bubble, "nodisp", this.__isEditing);
     }
 }
 
