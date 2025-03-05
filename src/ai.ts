@@ -1,5 +1,4 @@
 import { ChatCompletionMessageParam, CreateMLCEngine, MLCEngine } from "../node_modules/@mlc-ai/web-llm/lib/index";
-import { ChatCompletionNonStreamingParams } from "../node_modules/@mlc-ai/web-llm/lib/message";
 import { MimiMonitor } from "./mimi";
 import { Deferred } from "./util";
 

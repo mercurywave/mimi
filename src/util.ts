@@ -44,7 +44,7 @@ export class Deferred<T> implements Promise<T> {
     }
 
 
-    public resolve(val: T) { this._resolveSelf(val); }
-    public reject(reason: any) { this._rejectSelf(reason); }
+    public resolve(val?: T) { this._resolveSelf(val); }
+    public reject(reason?: any) { this._rejectSelf(reason); }
 
 }
