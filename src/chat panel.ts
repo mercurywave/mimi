@@ -18,6 +18,8 @@ export class ChatPanel extends HTMLElement {
     __chat: Chat;
     __panel: HTMLDivElement;
     public __dirty: boolean = false;
+    public get chat(): Chat { return this.__chat; }
+    public get type(): string { return this.__chat.template; }
     constructor(chat: Chat){
         super();
         this.__chat = chat;
@@ -30,6 +32,7 @@ export class ChatPanel extends HTMLElement {
         for (const message of this.__chat.messages) {
             let bubble = new ChatMessage(this, message);
             this.__panel.appendChild(bubble);
+            bubble.focusOnText();
         }
     }
     attributeChangedCallback(name, oldValue, newValue){
@@ -44,15 +47,17 @@ export class ChatPanel extends HTMLElement {
     }
 
     public Save() {
-        console.log(this.__chat);
-        //DB.SaveChat(this.__chat);
+        if(this.__dirty){
+            console.log(this.__chat);
+            //DB.SaveChat(this.__chat);
+        }
     }
 
     public async RunPrompt(): Promise<void>{
         let bubble = this.AddMessage(con.msg.typeAi, "...", true);
         bubble.focusOnStop();
 
-        let persona = "You are a professional therapist who wants to help your patients succeed";
+        let persona = `You are a professional therapist who wants to help your patient succeed.`;
         let job = AI.Queue(this.__chat, new ChatAgent(persona, (reply) => {
             bubble.value = reply;
         }));
@@ -109,17 +114,30 @@ export class ChatMessage extends HTMLElement {
                 overflow: hidden;
             }
             .bubble:focus{
-                outline: 1px solid #D33A2C;
+                outline: 1px solid #D33A2C !important;
                 background-color: #fff !important;
                 color: #000  !important;
+            }
+            .bubble.pending{
+                outline: 1px solid rgb(222, 173, 169);
+                background-color: #fff !important;
+                color: #000 !important;
             }
 
             .user {
                 width: 80%;
                 float: right;
             }
-            
             .user .bubble {
+                background-color: #521611;
+                color: #FFFFFF;
+            }
+
+            .note {
+                width: calc(100% - 8px);
+                float: right;
+            }
+            .note .bubble {
                 background-color: #521611;
                 color: #FFFFFF;
             }
@@ -128,7 +146,6 @@ export class ChatMessage extends HTMLElement {
                 width: 80%;
                 float: left;
             }
-
             .ai .bubble {
                 background-color: #FFE7E7;
             }
@@ -163,7 +180,7 @@ export class ChatMessage extends HTMLElement {
         this.__bubble = this.shadowRoot.querySelector(".bubble");
         this.__btStop = this.shadowRoot.querySelector(".btStop");
         this.__wrap = this.shadowRoot.querySelector(".bubbleWrap") as any;
-        this.__wrap.classList.add(ChatMessage.getClass(this.__message));
+        this.__wrap.classList.add(ChatMessage.getClass(this.__panel.__chat, this.__message));
         this.__bubble.addEventListener("input", () => {
             // this is a clever hack to fill the wrapper to the same size
             // this makes the textarea expand to fill available space
@@ -181,12 +198,25 @@ export class ChatMessage extends HTMLElement {
                 }
             }
         });
+        if(this.__message.type == con.msg.typeNote){
+            this.__bubble.rows = 8;
+        }
         this.update();
     }
     attributeChangedCallback(name, oldValue, newValue){
     }
 
-    static getClass(message: Message): string{
+    static getClass(chat: Chat, message: Message): string{
+        switch(message.type){
+            case con.msg.typePrompt: 
+            case con.msg.typeAi: 
+                return "ai";
+            case con.msg.typeUser: 
+                if(chat.template == con.cht.templateJournal)
+                    return "note";
+                return "user";
+            case con.msg.typeNote: return "note";
+        }
         return message.type;
     }
 
@@ -211,6 +241,7 @@ export class ChatMessage extends HTMLElement {
         const isPending = this.__message.isPending;
         const type = this.__message.type;
         util.ToggleClassIf(this.__btStop, "nodisp", type != con.msg.typeAi || !isPending);
+        util.ToggleClassIf(this.__bubble, "pending", isPending);
     }
 }
 

@@ -12,18 +12,31 @@ document.addEventListener("DOMContentLoaded", () => {
 let _activePanel: ChatPanel | null = null;
 
 function initUi(){
-    let activeChat = DB.CreateChat(con.cht.typeNote);
-    _activePanel = new ChatPanel(activeChat);
-    const divChat = document.getElementById("chatContainer") as HTMLDivElement;
-    divChat.appendChild(_activePanel);
-    _activePanel.AddMessage(con.msg.typeAi, "Hello! What can I help you with today?");
-    _activePanel.AddMessage(con.msg.typeUser, "say 'hello'", true).focusOnText();
+    setupButton("btJournal", con.cht.templateJournal);
+    setupButton("btNote", con.cht.templateNote);
+    setupButton("btChat", con.cht.templateChat);
+
+    addChat(con.cht.templateNote);
 }
 
+function setupButton(id: string, template: string){
+    let bt = document.querySelector(`#${id}`);
+    bt.addEventListener("click", () => {
+        addChat(template);
+    })
+}
 
 async function setup(){
     await DB.Init();
     console.log("Hello World");
+}
+
+function addChat(template: string){
+    let activeChat = DB.CreateChat(template);
+    _activePanel = new ChatPanel(activeChat);
+    const divChat = document.getElementById("chatContainer") as HTMLDivElement;
+    divChat.innerHTML = '';
+    divChat.appendChild(_activePanel);
 }
 
 

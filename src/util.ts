@@ -1,9 +1,9 @@
 
 export namespace con{
     export namespace cht{
-        export const typeJournal = "journal";
-        export const typeChat = "chat";
-        export const typeNote = "note";
+        export const templateJournal = "journal";
+        export const templateChat = "chat";
+        export const templateNote = "note";
     }
     export namespace msg{
         export const typeAi = "ai";

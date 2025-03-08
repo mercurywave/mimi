@@ -23,15 +23,26 @@ export namespace DB {
         await future;
     }
 
-    export function CreateChat(type: string): Chat {
+    export function CreateChat(template: string): Chat {
         let now =  new Date().toISOString();
         let chat = {
             id: crypto.randomUUID(),
             messages: [],
             creationIso: now,
             editIso: now,
-            type: type,
+            template: template,
         };
+        if(template == con.cht.templateChat){
+            chat.messages.push(CreateMessage(con.msg.typeAi, "Hello! What can I help you with today?"));
+            chat.messages.push(CreateMessage(con.msg.typeUser, "", true));
+        }
+        if(template == con.cht.templateJournal){
+            chat.messages.push(CreateMessage(con.msg.typeAi, "How are you feeling today?"));
+            chat.messages.push(CreateMessage(con.msg.typeUser, "", true));
+        }
+        if(template == con.cht.templateNote){
+            chat.messages.push(CreateMessage(con.msg.typeNote, "", true));
+        }
         return chat;
     }
 
@@ -42,7 +53,7 @@ export namespace DB {
             creationIso: now,
             editIso: now,
             type: type,
-            isPending: isPending,
+            isPending: isPending ?? false,
         };
         return msg;
     }
@@ -75,7 +86,7 @@ export interface Chat {
     id: string;
     creationIso: string;
     editIso: string;
-    type: string;
+    template: string;
 }
 
 export interface Message {
