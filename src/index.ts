@@ -1,6 +1,7 @@
 import { ChatCompletionMessageParam } from "../node_modules/@mlc-ai/web-llm/lib/index";
 import { Agent, AI, SimpleAgent } from "./ai";
 import { ChatPanel } from "./chat panel";
+import { ChatPreview } from "./chat preview";
 import { Chat, DB, Message } from "./db";
 import { con } from "./util";
 
@@ -10,11 +11,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let _activePanel: ChatPanel | null = null;
+let _previewPane: HTMLDivElement | null = null;
 
 function initUi(){
     setupButton("btJournal", con.cht.templateJournal);
     setupButton("btNote", con.cht.templateNote);
     setupButton("btChat", con.cht.templateChat);
+    _previewPane = document.querySelector("#previews");
 
     addChat(con.cht.templateNote);
 }
@@ -33,10 +36,33 @@ async function setup(){
 
 function addChat(template: string){
     let activeChat = DB.CreateChat(template);
-    _activePanel = new ChatPanel(activeChat);
+    addChatPreview(activeChat);
+    switchToChat(activeChat);
+}
+
+function switchToChat(chat: Chat){
+    _activePanel = new ChatPanel(chat);
     const divChat = document.getElementById("chatContainer") as HTMLDivElement;
     divChat.innerHTML = '';
     divChat.appendChild(_activePanel);
+    for(const card of document.querySelectorAll("chat-preview") as NodeListOf<ChatPreview>){
+        card.CheckSelectFromChat(chat);
+    }
+    updateHistory();
+}
+
+function addChatPreview(chat: Chat){
+    let card = new ChatPreview(chat);
+    _previewPane.appendChild(card);
+    card.addEventListener("click", () => {
+        switchToChat(chat);
+    });
+}
+
+function updateHistory(){
+    for(const card of document.querySelectorAll("chat-preview") as NodeListOf<ChatPreview>){
+        card.update();
+    }
 }
 
 

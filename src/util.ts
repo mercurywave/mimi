@@ -28,6 +28,13 @@ export namespace util {
         tmplt.innerHTML = innerHtml;
         return tmplt;
     }
+
+    export function ellipsize(text, maxLength) {
+        if (text.length > maxLength) {
+          return text.slice(0, maxLength - 3) + "...";
+        }
+        return text;
+      }
 }
 
 export class Deferred<T> implements Promise<T> {
