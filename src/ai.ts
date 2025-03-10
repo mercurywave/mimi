@@ -1,4 +1,5 @@
 import { ChatCompletionMessage, ChatCompletionMessageParam, CreateMLCEngine, MLCEngine } from "../node_modules/@mlc-ai/web-llm/lib/index";
+import { Chat } from "./db";
 import { MimiMonitor } from "./mimi";
 import { Deferred } from "./util";
 
@@ -49,20 +50,23 @@ export class AIManager {
     }
 
     public async RunPrompt(persona: string, prompts: string[], data: string[]): Promise<string>{
+        let messages: ChatCompletionMessageParam[] = [];
+        for(let line of data){
+            messages.push({ role: "user", content: line });
+        }
+        return await this.RunChat(persona, prompts, messages);
+    }
+
+    public async RunChat(persona: string, prompts: string[], messages: ChatCompletionMessageParam[]): Promise<string>{
         await this.Setup();
         this._isRunning = true;
         this.SignalEvent();
 
-        let messages: ChatCompletionMessageParam[] = [{ role: "system", content: persona }];
-        for (const line of prompts) {
-            messages.push({ role: "system", content: line })
-        }
-        for (const line of data) {
-            messages.push({ role: "user", content: line })
-        }
-
+        let prefix: ChatCompletionMessageParam[] = [{ role: "user", content: prompts.join('\n') }];
+        let system: ChatCompletionMessageParam[] = [{ role: "system", content: persona }];
+        
         const reply = await this._engine.chat.completions.create({
-            messages: messages,
+            messages: system.concat(prefix).concat(messages),
         });
 
         console.log(reply.choices[0].message);
@@ -107,16 +111,42 @@ export class AIManager {
     SignalEvent() {
         this._monitor.Update(this);
     }
+    
+
+    __uniqQueue: QueueEntry[] = [];
+    /** This lazily cancels earlier jobs put in the queue for the chat/ket pair */
+    public QueueUniqueJob(chat: Chat, agent: Agent, input: any, key?: string): AgentRunner{
+        key ??= "";
+        this.__uniqQueue = this.__uniqQueue.filter(e => !e.runner.isComplete && !e.runner.isCancelled);
+        let found = this.__uniqQueue.find(e => e.chat == chat && e.key == key);
+        if(found){
+            found.runner.Cancel();
+            this.__uniqQueue = this.__uniqQueue.filter(e => e !== found);
+        }
+        let runner = AI.Queue(input, agent);
+        this.__uniqQueue.push({
+            chat: chat,
+            key: key,
+            runner: runner,
+        });
+        return runner;
+    }
 }
 
-export enum ePriority { Low, Medium, High }
+interface QueueEntry{
+    runner: AgentRunner;
+    chat: Chat;
+    key: string;
+}
+
+export enum ePriority { Low = 0, Medium = 1, High = 2 }
 export abstract class Agent{
     public onStream: (reply: string) => void;
     public priority: ePriority = ePriority.Medium;
     public persona: string = "You are a helpful AI assistant.";
     public abstract GetBasePrompt(): string[];
     public abstract Setup(input: any): Promise<string>;
-    public async Process(obj: any, input: string): Promise<string> {
+    public async Process(obj: any, input: string): Promise<any> {
         let prompt = this.GetBasePrompt();
         if(this.onStream)
             return await AI.StreamPrompt(this.persona, prompt, [input], this.onStream);
@@ -130,12 +160,14 @@ enum eAgentStage { Waiting, Ready, Processed, Complete }
 export class AgentRunner{
     public agent: Agent;
     public input: any;
-    public process: string;
+    public cleanedInput: string;
+    public process: any;
     public output: any;
     public running: boolean;
     public stage: eAgentStage = eAgentStage.Waiting;
     public onComplete: Deferred<string> = new Deferred<string>();
     public get priority(): ePriority { return this.agent.priority; }
+    public get isComplete(): boolean { return this.stage == eAgentStage.Complete; }
     
     _cancel : boolean = false;
     /** 
@@ -160,18 +192,20 @@ export class AgentRunner{
     }
 
     public async TryAdvance(){
+        console.log(this.agent, this.stage);
         try{
             switch(this.stage){
                 case eAgentStage.Waiting:
-                    this.process = await this.agent.Setup(this.input);
+                    this.cleanedInput = await this.agent.Setup(this.input);
                     this.stage = eAgentStage.Ready;
                     break;
                 case eAgentStage.Ready:
                     this._rollback = false;
                     this.running = true;
                     try{
-                        this.process = await this.agent.Process(this.input, this.process);
+                        this.process = await this.agent.Process(this.input, this.cleanedInput);
                     } catch(e) {
+                        console.log(e);
                         throw e;
                     }
                     finally{
@@ -193,6 +227,7 @@ export class AgentRunner{
         } catch(e){
             this.agent._retries++;
             this.running = false;
+            this.onComplete?.reject();
         }
     }
 }
@@ -206,7 +241,7 @@ class AgentManager{
         runner.agent = agent;
         runner.input = input;
         this._agents.push(runner);
-        if(!this._running){
+        if(!this._running && (runner.priority >= ePriority.Medium || AI.isReady)){
             this.RunAgents();
         }
         return runner;

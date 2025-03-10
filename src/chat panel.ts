@@ -68,7 +68,7 @@ export class ChatPanel extends HTMLElement {
 
         bubble.Finalize();
         
-        let next = this.AddMessage(con.msg.typeUser);
+        let next = this.AddMessage(con.msg.typeUser, "", true);
         next.focusOnText();
     }
 }
@@ -189,7 +189,7 @@ export class ChatMessage extends HTMLElement {
             this.__panel.__dirty = true;
         });
         this.value = this.__message.text;
-        this.__bubble.addEventListener("keyup", (e) => {
+        this.__bubble.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
                 if(this.type == con.msg.typeUser && this.isPending){
                     this.Finalize();

@@ -31,6 +31,7 @@ export namespace DB {
             creationIso: now,
             editIso: now,
             template: template,
+            summary: "",
         };
         if(template == con.cht.templateChat){
             chat.messages.push(CreateMessage(con.msg.typeAi, "Hello! What can I help you with today?"));
@@ -87,6 +88,7 @@ export interface Chat {
     creationIso: string;
     editIso: string;
     template: string;
+    summary: string;
 }
 
 export interface Message {

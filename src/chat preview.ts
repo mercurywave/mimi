@@ -65,9 +65,12 @@ export class ChatPreview extends HTMLElement {
     public update(){
         let cht = this.__chat;
         this.__date.innerText = ChatPreview.DispDate(cht.creationIso);
-        let text = cht.messages[cht.messages.length - 1].text;
-        text = text.split('\n').slice(0,3).join(' ');
-        this.__summary.innerText = util.ellipsize(text, 40);
+        if(cht.messages.length > 0){
+            let text = cht.summary ?? cht.messages[cht.messages.length - 1].text;
+            console.log(text);
+            text = text.split('\n').slice(0,3).join(' ');
+            this.__summary.innerText = util.ellipsize(text, 40);
+        }
     }
 
     static DispDate(str: string): string{
