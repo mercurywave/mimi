@@ -119,10 +119,11 @@ export class ChatAgent extends Agent{
 }
 
 export class SummaryAgent extends Agent{
-    __persona : string;
+    __prompt : string;
     public priority: ePriority = ePriority.Low;
-    constructor(){
+    constructor(prompt?: string){
         super();
+        this.__prompt ??= `Summarize the following conversation in one sentence`;
     }
     public GetBasePrompt(): string[] { return [] };
     public async Setup(input: any): Promise<string> {
@@ -139,11 +140,43 @@ export class SummaryAgent extends Agent{
         }
         console.log(messages);
         let persona = `You are a professional therapist.`;
-        let prompt = `Summarize the following conversation in one sentence:`;
+        let prompt = this.__prompt + ":";
         let consolidate: ChatCompletionMessageParam 
             = { role: "user", content: messages.join("\n") };
         let result = await AI.RunChat(persona, [prompt], [consolidate]);
         console.log(result);
+        return result;
+    }
+    public async Complete(aiResponse: string): Promise<any> {
+        return aiResponse;
+    }
+}
+
+export class NoteSummaryAgent extends Agent{
+    __prompt : string;
+    constructor(prompt?: string, onStream?: (reply: string) => void){
+        super();
+        this.__prompt = prompt 
+            ?? `Summarize the following journal entry. Just list the key points and observations.`;
+        this.onStream = onStream;
+    }
+    public GetBasePrompt(): string[] { return [] };
+    public async Setup(input: any): Promise<string> {
+        return "";
+    }
+    public async Process(obj: Chat, input: string): Promise<any> {
+        let messages: string[] = [];
+        console.log("wtf?");
+        for (const msg of obj.messages) {
+            if(!msg.isPending){
+                let role = (msg.type == con.msg.typeAi || msg.type != con.msg.typePrompt)
+                    ? "assistant" : "user";   
+                messages.push(`${role}: ${msg.text}`);
+            }
+        }
+        let persona = `You are a professional therapist.`;
+        let prompt = this.__prompt + ":";
+        let result = await AI.StreamPrompt(persona, [prompt], [messages.join("\n")], this.onStream);
         return result;
     }
     public async Complete(aiResponse: string): Promise<any> {

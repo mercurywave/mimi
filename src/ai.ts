@@ -78,12 +78,11 @@ export class AIManager {
     public async StreamPrompt(persona: string, prompts: string[], data: string[], streamer: (reply:string) => void ): Promise<string>{
         let messages: ChatCompletionMessageParam[] = [{ role: "system", content: persona }];
         for (const line of prompts) {
-            messages.push({ role: "system", content: line })
+            messages.push({ role: "user", content: line })
         }
         for (const line of data) {
             messages.push({ role: "user", content: line })
         }
-
         return await this.StreamMessages(messages, streamer);
     }
 
@@ -153,7 +152,6 @@ export abstract class Agent{
         return AI.RunPrompt(this.persona, prompt, [input]);
     }
     public abstract Complete(aiResponse: string): Promise<any>;
-    public _retries: 0;
 }
 
 enum eAgentStage { Waiting, Ready, Processed, Complete }
@@ -170,6 +168,7 @@ export class AgentRunner{
     public get isComplete(): boolean { return this.stage == eAgentStage.Complete; }
     
     _cancel : boolean = false;
+    public _retries = 0;
     /** 
      * halt the job from continuing
     */
@@ -225,7 +224,7 @@ export class AgentRunner{
             }
             
         } catch(e){
-            this.agent._retries++;
+            this._retries++;
             this.running = false;
             this.onComplete?.reject();
         }
@@ -254,7 +253,7 @@ class AgentManager{
         if(agent.isCancelled){
             console.log("Agent Cancelled", agent);
             doRemove = true;
-        } else if(agent.agent._retries > 3){
+        } else if(agent._retries > 3){
             console.log("Agent Retries Exceeded", agent);
             doRemove = true;
         }

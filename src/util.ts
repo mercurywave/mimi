@@ -34,7 +34,11 @@ export namespace util {
           return text.slice(0, maxLength - 3) + "...";
         }
         return text;
-      }
+    }
+
+    export function deepCopy(obj: any):any{
+        return JSON.parse(JSON.stringify(obj));
+    }
 }
 
 export class Deferred<T> implements Promise<T> {

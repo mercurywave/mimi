@@ -1,6 +1,6 @@
 import { AI } from "./ai";
 import { Chat, DB, Message } from "./db";
-import { ChatAgent } from "./index";
+import { ChatAgent, NoteSummaryAgent, SummaryAgent } from "./index";
 import { con, util } from "./util";
 
 export class ChatPanel extends HTMLElement {
@@ -59,6 +59,24 @@ export class ChatPanel extends HTMLElement {
 
         let persona = `You are a professional therapist who wants to help your patient succeed.`;
         let job = AI.Queue(this.__chat, new ChatAgent(persona, (reply) => {
+            bubble.value = reply;
+        }));
+        bubble.__btStop.addEventListener("click", () => { job.Cancel(); });
+        try{
+            bubble.value = await job.onComplete;
+        } catch(e) { }
+
+        bubble.Finalize();
+        
+        let next = this.AddMessage(con.msg.typeUser, "", true);
+        next.focusOnText();
+    }
+
+    public async RunNoteSummary(msg: ChatMessage): Promise<void>{
+        let bubble = this.AddMessage(con.msg.typeAi, "...", true);
+        bubble.focusOnStop();
+
+        let job = AI.Queue(util.deepCopy(this.__chat), new NoteSummaryAgent(null, (reply) => {
             bubble.value = reply;
         }));
         bubble.__btStop.addEventListener("click", () => { job.Cancel(); });
@@ -194,6 +212,11 @@ export class ChatMessage extends HTMLElement {
                 if(this.type == con.msg.typeUser && this.isPending){
                     this.Finalize();
                     this.__panel.RunPrompt();
+                    e.preventDefault();
+                }
+                if(e.ctrlKey && this.type == con.msg.typeNote && this.isPending){
+                    this.Finalize();
+                    this.__panel.RunNoteSummary(this);
                     e.preventDefault();
                 }
             }
